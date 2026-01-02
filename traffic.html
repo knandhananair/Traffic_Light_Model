@@ -33,12 +33,15 @@
 <script>
     let model, webcam;
 
-    // Manually define your class labels in the same order as in Teachable Machine
+    // Class labels in Teachable Machine order
     const LABELS = ["Default_Class", "Red_Light", "Green_Light"];
+
+    // Minimum confidence required to accept Red/Green prediction
+    const THRESHOLD = 0.80; // 80%; you can tune this
 
     async function start() {
         // URL where your Teachable Machine model files are hosted
-        const URL = "https://teachablemachine.withgoogle.com/models/di2sb_WfA/"; // replace with your model link if different
+        const URL = "https://teachablemachine.withgoogle.com/models/di2sb_WfA/"; // change if you export a new model
 
         const modelURL = URL + "model.json";
         const metadataURL = URL + "metadata.json";
@@ -76,14 +79,21 @@
             }
         }
 
-        // highest.className is likely "0", "1", "2" → convert to integer
+        // highest.className is often "0", "1", "2"
         const idx = parseInt(highest.className, 10);
+        const labelFromIndex = LABELS[idx] || highest.className;
 
-        // Use the human‑readable label
-        const label = LABELS[idx] || highest.className;
+        let finalLabel;
+
+        // If confidence is low, force Default_Class (background)
+        if (highest.probability < THRESHOLD) {
+            finalLabel = "Default_Class";
+        } else {
+            finalLabel = labelFromIndex;
+        }
 
         document.getElementById("result").innerHTML =
-            label + " : " + (highest.probability * 100).toFixed(2) + "%";
+            finalLabel + " : " + (highest.probability * 100).toFixed(2) + "%";
     }
 </script>
 </body>
