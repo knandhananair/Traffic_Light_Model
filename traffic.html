@@ -33,10 +33,12 @@
 <script>
     let model, webcam;
 
+    // Manually define your class labels in the same order as in Teachable Machine
+    const LABELS = ["Default_Class", "Red_Light", "Green_Light"];
+
     async function start() {
-        // CHANGE THIS to the URL where your Teachable Machine model files are hosted:
-        // Example: "https://yourusername.github.io/yourrepo/traffic_light_model/"
-        const URL = "https://teachablemachine.withgoogle.com/models/di2sb_WfA/"; // replace with your model link
+        // URL where your Teachable Machine model files are hosted
+        const URL = "https://teachablemachine.withgoogle.com/models/di2sb_WfA/"; // replace with your model link if different
 
         const modelURL = URL + "model.json";
         const metadataURL = URL + "metadata.json";
@@ -74,8 +76,14 @@
             }
         }
 
+        // highest.className is likely "0", "1", "2" → convert to integer
+        const idx = parseInt(highest.className, 10);
+
+        // Use the human‑readable label
+        const label = LABELS[idx] || highest.className;
+
         document.getElementById("result").innerHTML =
-            highest.className + " : " + (highest.probability * 100).toFixed(2) + "%";
+            label + " : " + (highest.probability * 100).toFixed(2) + "%";
     }
 </script>
 </body>
