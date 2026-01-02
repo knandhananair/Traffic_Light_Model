@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Traffic Light Detection</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="teachablemachine-image.min.js"></script>
+</head>
+<body>
+    <h2>Traffic Light Detection</h2>
+    <button onclick="start()">Start Camera</button>
+    <div id="result">Waiting...</div>
+    <video id="webcam" autoplay playsinline width="300"></video>
+
+<script>
+let model, webcam;
+
+async function start() {
+    const URL = "./";
+
+    model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+
+    webcam = new tmImage.Webcam(300, 300, true);
+    await webcam.setup();
+    await webcam.play();
+
+    document.getElementById("webcam").srcObject = webcam.webcam;
+
+    window.requestAnimationFrame(loop);
+}
+
+async function loop() {
+    webcam.update();
+    const prediction = await model.predict(webcam.canvas);
+
+    let highest = prediction[0];
+    for (let i = 1; i < prediction.length; i++) {
+        if (prediction[i].probability > highest.probability) {
+            highest = prediction[i];
+        }
+    }
+
+    document.getElementById("result").innerHTML =
+        highest.className + " : " + (highest.probability * 100).toFixed(2) + "%";
+
+    window.requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
