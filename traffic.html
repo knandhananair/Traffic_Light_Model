@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Traffic Light Detection</title>
+    <!-- Use the Teachable Machine image library -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #webcam-container {
+            margin-top: 10px;
+        }
+        #result {
+            margin-top: 10px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>Traffic Light Detection</h2>
+
+    <button onclick="start()">Start Camera</button>
+    <div id="result">Waiting...</div>
+
+    <!-- Teachable Machine uses its own canvas, so we use this container -->
+    <div id="webcam-container"></div>
+
+<script>
+    let model, webcam;
+
+    async function start() {
+        // CHANGE THIS to the URL where your Teachable Machine model files are hosted:
+        // Example: "https://yourusername.github.io/yourrepo/traffic_light_model/"
+        const URL = "https://teachablemachine.withgoogle.com/models/di2sb_WfA/"; // replace with your model link
+
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        // Load the Teachable Machine image model
+        model = await tmImage.load(modelURL, metadataURL);
+
+        // Setup webcam (width, height, flip)
+        const flip = true;
+        webcam = new tmImage.Webcam(300, 300, flip);
+        await webcam.setup();
+        await webcam.play();
+
+        // Display webcam canvas in the page
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+
+        window.requestAnimationFrame(loop);
+    }
+
+    async function loop() {
+        webcam.update();
+        await predict();
+        window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+        // Predict on the webcam canvas
+        const prediction = await model.predict(webcam.canvas);
+
+        // Find highest-probability class
+        let highest = prediction[0];
+        for (let i = 1; i < prediction.length; i++) {
+            if (prediction[i].probability > highest.probability) {
+                highest = prediction[i];
+            }
+        }
+
+        document.getElementById("result").innerHTML =
+            highest.className + " : " + (highest.probability * 100).toFixed(2) + "%";
+    }
+</script>
+</body>
+</html>
